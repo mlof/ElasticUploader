@@ -29,4 +29,9 @@ jobs:
       run: dotnet test --no-build --verbosity normal --configuration Release
     - name : Publish
       run: dotnet publish --configuration Release
-    
+    - name: Archive production artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: win-x86
+        path: |
+          ElasticUploader/bin/Release/net7.0/win-x64/publish/
