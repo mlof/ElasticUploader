@@ -10,7 +10,7 @@ namespace ElasticUploader;
 [HelpOption("-?|-h|--help")]
 [Command(Description = "Uploads a csv file to elastic", Name = "elastic-upload", FullName = "Elastic Uploader",
         ExtendedHelpText = @"
-A simple tool to upload a csv file to elastic.
+A simple tool to upload a csv file to an Elasticsearch index.
 
 If index name is not specified, the file name will be used.
 Authentication can be done with either a cloud id and api key or a elastic uri and user/password.
@@ -89,11 +89,7 @@ public class Program
         var client = GetClient(header);
 
 
-        using var reader = new StreamReader(File);
-        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
-
-
-        var records = csv.GetRecordsAsync<dynamic>();
+        var records = GetCsvRecords();
 
 
         await records.Buffer(this.BufferSize).ForEachAwaitAsync(async batch =>
@@ -105,6 +101,15 @@ public class Program
                 Console.WriteLine(response.DebugInformation);
             }
         });
+    }
+
+    private IAsyncEnumerable<dynamic> GetCsvRecords()
+    {
+        using var reader = new StreamReader(File);
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+
+
+        return csv.GetRecordsAsync<dynamic>();
     }
 
     [Option(Description = "Index name", ShortName = "i", LongName = "index")]
