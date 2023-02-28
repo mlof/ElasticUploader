@@ -8,7 +8,7 @@ using McMaster.Extensions.CommandLineUtils;
 namespace ElasticUploader;
 
 [HelpOption("-?|-h|--help")]
-[Command(Description = "Uploads a csv file to elastic", Name = "elastic-uploader", FullName = "Elastic Uploader",
+[Command(Description = "Uploads a csv file to elastic", Name = "elastic-upload", FullName = "Elastic Uploader",
         ExtendedHelpText = @"
 A simple tool to upload a csv file to elastic.
 
@@ -17,9 +17,9 @@ Authentication can be done with either a cloud id and api key or a elastic uri a
 
 Example usage:
 
-elastic-uploader -f C:\temp\test.csv -e http://localhost:9200 -u elastic -p changeme -b 1000
+elastic-upload -f C:\temp\test.csv -e http://localhost:9200 -u elastic -p changeme -b 1000
 
-elastic-uploader -f C:\temp\test.csv -c cloudid:cloudid -k apikey -b 1000
+elastic-upload -f C:\temp\test.csv -c cloudid:cloudid -k apikey -b 1000
 
 
 ")]
