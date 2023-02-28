@@ -29,9 +29,16 @@ jobs:
       run: dotnet test --no-build --verbosity normal --configuration Release
     - name : Publish
       run: dotnet publish --configuration Release
-    - name: Archive production artifacts
+    - name: Archive artifacts
       uses: actions/upload-artifact@v3
       with:
         name: win-x86
         path: |
           ElasticUploader/bin/Release/net7.0/win-x64/publish/
+    - name: Create release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          ElasticUploader/bin/Release/net7.0/win-x64/publish/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
