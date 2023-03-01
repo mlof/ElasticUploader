@@ -1,6 +1,6 @@
 # Elastic Uploader
 
-A simple tool to upload a csv file to an Elasticsearch index.
+A simple tool to upload a csv file to an Elasticsearch index. Because screw having to write a logstash config for every csv file.
 
 If index name is not specified, the file name will be used.
 
