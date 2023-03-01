@@ -31,6 +31,9 @@ public class Program
     public string File { get; }
 
 
+    [Option(Description = "Property name formatting", LongName = "property-formatting")]
+    public PropertyNameStrategy PropertyNameFormatting { get; set; } = PropertyNameStrategy.Default;
+
     public static Task Main(string[] args)
     {
         return CommandLineApplication.ExecuteAsync<Program>(args);
@@ -46,11 +49,24 @@ public class Program
         {
             this.csvConfiguration = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
-                HasHeaderRecord = true,
-                Delimiter = this.Delimiter,
-                IgnoreBlankLines = true,
-                TrimOptions = TrimOptions.Trim
+                    HasHeaderRecord = true,
+                    Delimiter = this.Delimiter,
+                    IgnoreBlankLines = true,
+                    TrimOptions = TrimOptions.Trim
             };
+
+            csvConfiguration.PrepareHeaderForMatch = PropertyNameFormatting switch
+            {
+                    PropertyNameStrategy.Default => args =>
+                            System.Text.Json.JsonNamingPolicy.CamelCase.ConvertName(args.Header),
+                    PropertyNameStrategy.CamelCase => args =>
+                            System.Text.Json.JsonNamingPolicy.CamelCase.ConvertName(args.Header),
+                    PropertyNameStrategy.Lower => args => args.Header.ToLower(CultureInfo.InvariantCulture),
+                    PropertyNameStrategy.Upper => args => args.Header.ToUpper(CultureInfo.InvariantCulture),
+                    _ => throw new ArgumentOutOfRangeException()
+            };
+
+            csvConfiguration.PrepareHeaderForMatch = args => args.Header.ToLower();
             Console.WriteLine(" --- Starting upload --- ");
 
             if (string.IsNullOrWhiteSpace(IndexName))
@@ -108,7 +124,8 @@ public class Program
                     descriptor.IndexMany(batch, (operationDescriptor, o) => operationDescriptor.Index(this.IndexName)));
             if (response.IsValidResponse)
             {
-                Console.WriteLine($"{DateTime.Now.ToString("T", CultureInfo.CurrentCulture)}: \t Uploaded {batch.Count} records");
+                Console.WriteLine(
+                        $"{DateTime.Now.ToString("T", CultureInfo.CurrentCulture)}: \t Uploaded {batch.Count} records");
             }
             else if (!response.IsValidResponse)
             {
@@ -173,7 +190,7 @@ public class Program
     public int BufferSize { get; set; } = 1000;
 
 
-    [Option(Description = "Delimiter", ShortName = "d", LongName = "delimiter")]
+    [Option(Description = "CSV Delimiter", ShortName = "d", LongName = "delimiter")]
     public string Delimiter { get; set; } = ",";
 
     [Option(Description = "Api key", ShortName = "k", LongName = "key")]
@@ -181,4 +198,12 @@ public class Program
 
     [Option(Description = "Cloud id", ShortName = "c", LongName = "cloud")]
     public string? CloudId { get; set; }
+}
+
+public enum PropertyNameStrategy
+{
+    Default,
+    Lower,
+    Upper,
+    CamelCase,
 }
