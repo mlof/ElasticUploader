@@ -37,6 +37,7 @@ jobs:
           ElasticUploader/bin/Release/net7.0/win-x64/publish/
     - name: Create release
       uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
       with:
         files: |
           ElasticUploader/bin/Release/net7.0/win-x64/publish/*
