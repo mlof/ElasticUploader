@@ -32,7 +32,7 @@ public class Program
 
 
     [Option(Description = "Property name formatting", LongName = "property-formatting", ShortName = "pf")]
-    public PropertyNameStrategy PropertyNameFormatting { get; set; } = PropertyNameStrategy.Default;
+    public PropertyNameStrategy PropertyNameFormatting { get; set; } = PropertyNameStrategy.CamelCase;
 
     public static Task Main(string[] args)
     {
@@ -57,8 +57,6 @@ public class Program
 
             csvConfiguration.PrepareHeaderForMatch = PropertyNameFormatting switch
             {
-                    PropertyNameStrategy.Default => args =>
-                            System.Text.Json.JsonNamingPolicy.CamelCase.ConvertName(args.Header),
                     PropertyNameStrategy.CamelCase => args =>
                             System.Text.Json.JsonNamingPolicy.CamelCase.ConvertName(args.Header),
                     PropertyNameStrategy.Lower => args => args.Header.ToLower(CultureInfo.InvariantCulture),
@@ -79,7 +77,7 @@ public class Program
             Console.WriteLine();
 
 
-            await Upload();
+            await Upload(cancellationToken);
         }
     }
 
@@ -202,8 +200,7 @@ public class Program
 
 public enum PropertyNameStrategy
 {
-    Default,
+    CamelCase,
     Lower,
     Upper,
-    CamelCase,
 }

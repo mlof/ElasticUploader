@@ -5,7 +5,12 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ElasticUploader", "ElasticUploader\ElasticUploader.csproj", "{6F63B48C-0C84-4D11-9AF6-C14CD1796FF9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ElasticUploader.Tests", "ElasticUploader.Tests\ElasticUploader.Tests.csproj", "{88068B47-6A46-4A53-BC23-81D9DFBC8A6C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ElasticUploader.Tests", "ElasticUploader.Tests\ElasticUploader.Tests.csproj", "{88068B47-6A46-4A53-BC23-81D9DFBC8A6C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{92F1D84D-98BD-434C-BA6C-87BF36227E38}"
+	ProjectSection(SolutionItems) = preProject
+		readme.md = readme.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
