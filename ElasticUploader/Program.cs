@@ -31,7 +31,7 @@ public class Program
     public string File { get; }
 
 
-    [Option(Description = "Property name formatting", LongName = "property-formatting")]
+    [Option(Description = "Property name formatting", LongName = "property-formatting", ShortName = "pf")]
     public PropertyNameStrategy PropertyNameFormatting { get; set; } = PropertyNameStrategy.Default;
 
     public static Task Main(string[] args)
