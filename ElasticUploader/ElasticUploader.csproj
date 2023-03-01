@@ -13,12 +13,17 @@
 
 	</PropertyGroup>
 
+
 	<ItemGroup>
 		<PackageReference Include="CsvHelper" Version="30.0.1" />
 		<PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.5" />
 		<PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="4.0.2" />
 		<PackageReference Include="System.Interactive.Async" Version="6.0.1" />
 		<PackageReference Include="System.Linq.Async" Version="6.0.1" />
+		<PackageReference Include="GitVersion.MsBuild" Version="5.12.0">
+			<PrivateAssets>All</PrivateAssets>
+		</PackageReference>
+
 	</ItemGroup>
 
 </Project>
