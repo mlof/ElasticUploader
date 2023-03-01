@@ -1,6 +1,6 @@
-﻿using System.Collections.Concurrent;
-using System.Globalization;
+﻿using System.Globalization;
 using CsvHelper;
+using CsvHelper.Configuration;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Transport;
 using McMaster.Extensions.CommandLineUtils;
@@ -25,13 +25,15 @@ elastic-upload -f C:\temp\test.csv -c cloudid:cloudid -k apikey -b 1000
 ")]
 public class Program
 {
+    private CsvConfiguration csvConfiguration;
+
     [Option(Description = "File", ShortName = "f", LongName = "file")]
     public string File { get; }
 
 
     public static Task Main(string[] args)
     {
-        return CommandLineApplication.ExecuteAsync<Program>();
+        return CommandLineApplication.ExecuteAsync<Program>(args);
     }
 
     private async Task OnExecuteAsync(CommandLineApplication app)
@@ -42,6 +44,13 @@ public class Program
         }
         else
         {
+            this.csvConfiguration = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true,
+                Delimiter = this.Delimiter,
+                IgnoreBlankLines = true,
+                TrimOptions = TrimOptions.Trim
+            };
             Console.WriteLine(" --- Starting upload --- ");
 
             if (string.IsNullOrWhiteSpace(IndexName))
@@ -52,10 +61,8 @@ public class Program
 
             Console.WriteLine();
             Console.WriteLine();
-            Console.WriteLine("Waiting 3 seconds before starting upload");
 
 
-            await Task.Delay(3000);
             await Upload();
         }
     }
@@ -67,12 +74,12 @@ public class Program
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(ElasticUri) || string.IsNullOrWhiteSpace(CloudId))
+        if (string.IsNullOrWhiteSpace(ElasticUri) && string.IsNullOrWhiteSpace(CloudId))
         {
             return false;
         }
 
-        if ((string.IsNullOrWhiteSpace(ElasticUser) && string.IsNullOrWhiteSpace(ElasticPassword)) ||
+        if ((string.IsNullOrWhiteSpace(ElasticUser) && string.IsNullOrWhiteSpace(ElasticPassword)) &&
             string.IsNullOrWhiteSpace(ApiKey))
         {
             return false;
@@ -89,28 +96,32 @@ public class Program
         var client = GetClient(header);
 
 
-        var records = GetCsvRecords();
+        using var reader = new StreamReader(File);
+        using var csv = new CsvReader(reader, this.csvConfiguration);
 
+
+        var records = csv.GetRecordsAsync<dynamic>();
 
         await records.Buffer(this.BufferSize).ForEachAwaitAsync(async batch =>
         {
             var response = await client.BulkAsync(descriptor =>
                     descriptor.IndexMany(batch, (operationDescriptor, o) => operationDescriptor.Index(this.IndexName)));
-            if (!response.IsValidResponse)
+            if (response.IsValidResponse)
             {
-                Console.WriteLine(response.DebugInformation);
+                Console.WriteLine($"{DateTime.Now.ToString("T", CultureInfo.CurrentCulture)}: \t Uploaded {batch.Count} records");
+            }
+            else if (!response.IsValidResponse)
+            {
+                Console.WriteLine("Error uploading records");
+
+                foreach (var item in response.ItemsWithErrors)
+                {
+                    Console.WriteLine(item.Error);
+                }
             }
         });
     }
 
-    private IAsyncEnumerable<dynamic> GetCsvRecords()
-    {
-        using var reader = new StreamReader(File);
-        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
-
-
-        return csv.GetRecordsAsync<dynamic>();
-    }
 
     [Option(Description = "Index name", ShortName = "i", LongName = "index")]
     public string IndexName { get; set; }
@@ -137,7 +148,8 @@ public class Program
     {
         if (!string.IsNullOrWhiteSpace(this.ApiKey))
         {
-            return new ApiKey(ApiKey);
+            var split = ApiKey.Split(':');
+            return new Base64ApiKey(split[0], split[1]);
         }
 
         if (!string.IsNullOrWhiteSpace(this.ElasticUser) && !string.IsNullOrWhiteSpace(this.ElasticPassword))
@@ -159,6 +171,10 @@ public class Program
 
     [Option(Description = "Buffer size", ShortName = "b", LongName = "buffer")]
     public int BufferSize { get; set; } = 1000;
+
+
+    [Option(Description = "Delimiter", ShortName = "d", LongName = "delimiter")]
+    public string Delimiter { get; set; } = ",";
 
     [Option(Description = "Api key", ShortName = "k", LongName = "key")]
     public string? ApiKey { get; set; }
