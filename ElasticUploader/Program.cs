@@ -39,7 +39,7 @@ public class Program
         return CommandLineApplication.ExecuteAsync<Program>(args);
     }
 
-    private async Task OnExecuteAsync(CommandLineApplication app)
+    private async Task OnExecuteAsync(CommandLineApplication app, CancellationToken cancellationToken = default)
     {
         if (!HasRequiredOptions())
         {
@@ -104,7 +104,7 @@ public class Program
         return true;
     }
 
-    private async Task Upload()
+    private async Task Upload(CancellationToken cancellationToken = default)
     {
         var header = GetAuthenticationHeader();
 
@@ -116,16 +116,16 @@ public class Program
         using var csv = new CsvReader(reader, this.csvConfiguration);
 
 
-        var records = csv.GetRecordsAsync<dynamic>();
+        var records = csv.GetRecordsAsync<dynamic>(cancellationToken);
 
-        await records.Buffer(this.BufferSize).ForEachAwaitAsync(async batch =>
+        await records.Buffer(this.BufferSize).ForEachAwaitWithCancellationAsync(async (batch, index, token) =>
         {
             var response = await client.BulkAsync(descriptor =>
-                    descriptor.IndexMany(batch, (operationDescriptor, o) => operationDescriptor.Index(this.IndexName)));
+                    descriptor.IndexMany(batch, (operationDescriptor, o) => operationDescriptor.Index(this.IndexName)), token);
             if (response.IsValidResponse)
             {
                 Console.WriteLine(
-                        $"{DateTime.Now.ToString("T", CultureInfo.CurrentCulture)}: \t Uploaded {batch.Count} records");
+                        $"{DateTime.Now.ToString("T", CultureInfo.CurrentCulture)}: \t Uploaded batch {index} of {batch.Count} records");
             }
             else if (!response.IsValidResponse)
             {
@@ -136,12 +136,12 @@ public class Program
                     Console.WriteLine(item.Error);
                 }
             }
-        });
+        }, cancellationToken);
     }
 
 
     [Option(Description = "Index name", ShortName = "i", LongName = "index")]
-    public string IndexName { get; set; }
+    public string? IndexName { get; set; } = null;
 
     private ElasticsearchClient GetClient(AuthorizationHeader header)
     {
